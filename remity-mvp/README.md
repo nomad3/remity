@@ -79,7 +79,7 @@ remity-mvp/
     cd remity-mvp
     ```
 
-2.  **Configure Environment Variables:**
+2.  **Configure Environment Variables:**<>
     *   **Backend:** Copy `backend/.env.example` to `backend/.env`. Review the file and **replace placeholder values** (especially `JWT_SECRET_KEY`, Stripe keys, etc.) with your actual development/test credentials. Generate a strong `JWT_SECRET_KEY` using `openssl rand -hex 32`.
     *   **Frontend:** Copy `frontend/.env.example` to `frontend/.env.local`. Update `REACT_APP_STRIPE_PUBLISHABLE_KEY` if needed. (`.env.local` is gitignored).
 
@@ -183,18 +183,21 @@ To manually generate a new migration after changing SQLAlchemy models (`backend/
     ```
 *   Access tokens have a limited lifetime (default 30 minutes). Use the `refresh_token` with the `/auth/refresh` endpoint to obtain a new `access_token`.
 
-## Creating an Admin User (Manual - MVP)
+## Creating an Admin User
 
-The application includes admin-only endpoints (e.g., for transaction approval) protected by the `get_current_active_superuser` dependency. To use these:
+The application includes admin-only endpoints (e.g., for transaction approval) protected by the `get_current_active_superuser` dependency. To create the first admin user:
 
-1.  **Register a regular user** via the API (`/auth/register`) or frontend signup flow.
-2.  **Manually update the user in the database:** Connect to the PostgreSQL database (e.g., using `docker-compose exec db psql -U remityuser -d remitydb` or a GUI tool connected to `localhost:5432`) and set the `is_superuser` flag to `true` for the desired user:
-    ```sql
-    UPDATE users SET is_superuser = true WHERE email = 'your_admin_email@example.com';
+1.  **Ensure Containers are Running:** Start the application stack if it's not already running:
+    ```bash
+    docker-compose up -d
     ```
-3.  Log in as that user to obtain tokens. Requests made with this user's token will now pass the superuser check.
-
-*(For a production scenario, implement a secure command-line script or initial setup process to create the first admin user).*
+2.  **Run the Creation Script:** Execute the `initial_data.py` script inside the running `backend` container using `docker-compose exec`. Replace the email and password with your desired admin credentials:
+    ```bash
+    docker-compose exec backend python app/initial_data.py --email your_admin_email@example.com --password YourSecurePassword123
+    ```
+    *   This script will either create a new user with the given credentials and mark them as a superuser, or update an existing user with that email to be a superuser.
+    *   Choose a strong password (minimum 8 characters enforced by the script).
+3.  **Log In:** You can now log in via the frontend (`http://localhost:3000/login`) or API (`http://localhost:8001/api/v1/auth/login`) using the admin credentials you just created. Requests made with this user's token will have superuser privileges.
 
 ## API Endpoints Overview
 
@@ -240,7 +243,12 @@ The backend exposes API endpoints under `/api/v1/`:
     *   **Webhooks:** Endpoints for receiving webhook notifications (e.g., payment success from Stripe, KYC status updates, payout status) are planned but **not yet implemented**. Secure webhook handling (signature validation) is crucial and must be added. The current manual approval flow depends on the payment webhook correctly updating the transaction status to `PENDING_APPROVAL`.
 *   **Error Handling:** Basic error handling exists, but more specific exceptions and potentially a centralized handler should be implemented for robustness.
 *   **Testing:** Initial backend unit tests for security and user CRUD, plus a basic frontend component test, are included. Coverage should be significantly expanded.
-*   **Frontend Development:** The frontend currently has a basic homepage structure. Significant work is needed to build out functional components (Login/Signup forms, Dashboard, Transaction Flow, KYC flow, Admin Panel), implement routing (`react-router-dom`), state management (Context API or Zustand), and API service calls (`axios`).
+*   **Frontend Development:**
+    *   **Homepage:** A basic structure with Header, Hero, Features, Calculator, and Footer components is implemented (`frontend/src/components/`).
+    *   **Routing:** Basic routing using `react-router-dom` is set up in `App.tsx` for `/`, `/login`, `/register`, `/history`, and `/admin`.
+    *   **Authentication:** A basic `AuthContext` manages login state, and `LoginPage`, `RegisterPage` provide forms. `ProtectedRoute` component exists for securing routes.
+    *   **Admin Panel:** A placeholder layout (`AdminLayout`) and page (`PendingTransactions`) exist under `/admin`, but require UI implementation and API integration.
+    *   **Needed:** Significant work remains on building functional user dashboard, transaction flow, KYC integration, admin panel UI components, state management (e.g., Zustand), and robust API service calls (`axios`).
 *   **Infrastructure:** Implement the Terraform code in `infra/` to provision necessary GCP resources (VPC, Cloud SQL, MemoryStore, GCE/Cloud Run, Secret Manager, etc.).
 *   **Production Dockerfiles:** Create optimized multi-stage Dockerfiles for production builds (smaller images, non-root users, etc.).
 *   **CI/CD:** Set up a CI/CD pipeline (e.g., GitHub Actions, Cloud Build) for automated testing, building, and deployment.

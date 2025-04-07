@@ -140,5 +140,24 @@ class CRUDTransaction(CRUDBase[Transaction, TransactionCreate, TransactionBase])
             return None
 
 
+    async def get_multi(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> List[Transaction]:
+        """ Get multiple transactions (admin function). """
+        # Use the base class method directly, maybe order differently for admin view
+        try:
+            statement = (
+                select(self.model)
+                .offset(skip)
+                .limit(limit)
+                .order_by(self.model.created_at.desc()) # Keep default order for now
+            )
+            result = await db.execute(statement)
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Error getting multiple transactions (admin): {e}", exc_info=True)
+            return []
+
+
 # Instantiate the CRUD object for transactions
 transaction = CRUDTransaction(Transaction)

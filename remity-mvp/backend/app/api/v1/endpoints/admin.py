@@ -6,16 +6,112 @@ from typing import List
 
 from app import crud, models, schemas # Import from top-level __init__ files
 from app.api import dependencies # Import dependencies
-from app.models.transaction import TransactionStatus # Import status enum
+from app.models.transaction import TransactionStatus, Transaction # Import status enum and model
+from app.models.user import User # Import User model
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# --- Transaction Review Endpoints (Admin Only) ---
+# --- User Management Endpoints (Admin Only) ---
+
+@router.get("/users/", response_model=List[schemas.User])
+async def read_users(
+    db: AsyncSession = Depends(dependencies.get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
+) -> List[models.User]:
+    """
+    Retrieve all users. Requires superuser privileges.
+    """
+    logger.info(f"Admin {current_user.email} fetching all users.")
+    users = await crud.user.get_multi(db, skip=skip, limit=limit)
+    return users
+
+@router.get("/users/{user_id}", response_model=schemas.User)
+async def read_user(
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
+) -> models.User:
+    """
+    Get a specific user by ID. Requires superuser privileges.
+    """
+    logger.info(f"Admin {current_user.email} fetching user ID: {user_id}")
+    user = await crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+@router.put("/users/{user_id}", response_model=schemas.User)
+async def update_user_admin(
+    user_id: uuid.UUID,
+    *,
+    db: AsyncSession = Depends(dependencies.get_db),
+    user_in: schemas.UserUpdate, # Use the same update schema for now
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
+) -> models.User:
+    """
+    Update a user's details (e.g., activate/deactivate, change roles).
+    Requires superuser privileges.
+    Password changes should ideally go through a separate flow or user action.
+    """
+    logger.info(f"Admin {current_user.email} attempting to update user ID: {user_id}")
+    db_user = await crud.user.get(db, id=user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # Prevent admin from changing password directly via this endpoint for security
+    if user_in.password:
+        logger.warning(f"Admin {current_user.email} attempted to change password for user {user_id} via admin endpoint.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password cannot be updated via this admin endpoint.")
+
+    # Check for email conflict if email is being changed
+    if user_in.email and user_in.email != db_user.email:
+        existing_user = await crud.user.get_by_email(db, email=user_in.email)
+        if existing_user:
+            logger.warning(f"Admin update failed for {user_id}: New email '{user_in.email}' already registered.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this email already exists.",
+            )
+
+    # TODO: Add logic here to update roles or is_active status if needed via specific fields in UserUpdate or a dedicated AdminUserUpdate schema
+
+    try:
+        updated_user = await crud.user.update(db=db, db_obj=db_user, obj_in=user_in)
+        logger.info(f"User {user_id} updated successfully by admin {current_user.email}")
+        return updated_user
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while updating the user.",
+        )
+
+# Note: Deleting users via API might be risky; consider soft delete (setting is_active=False) instead.
+# @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT) ...
+
+# --- Transaction Management Endpoints (Admin Only) ---
+
+@router.get("/transactions/", response_model=List[schemas.Transaction])
+async def list_all_transactions(
+    db: AsyncSession = Depends(dependencies.get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
+    # Add filtering options? e.g., by status, user_id, date range
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
+) -> List[models.Transaction]:
+    """
+    Retrieve all transactions (paginated). Requires superuser privileges.
+    """
+    logger.info(f"Admin {current_user.email} fetching all transactions.")
+    transactions = await crud.transaction.get_multi(db, skip=skip, limit=limit)
+    return transactions
+
 
 @router.get("/transactions/pending", response_model=List[schemas.Transaction])
-async def list_transactions_pending_approval(
+async def list_transactions_pending_approval( # Keep this specific endpoint
     db: AsyncSession = Depends(dependencies.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),

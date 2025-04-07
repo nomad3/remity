@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List # Import List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
@@ -88,6 +88,18 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def is_superuser(self, user: User) -> bool:
         """ Check if a user is a superuser. """
         return user.is_superuser
+
+    async def get_multi(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> List[User]:
+        """ Get multiple users (admin function). """
+        # Use the base class method directly
+        return await super().get_multi(db=db, skip=skip, limit=limit)
+
+    # Note: Deleting users might be better handled by setting is_active=False (soft delete)
+    # rather than using the base remove method which does a hard delete.
+    # Implement soft delete logic here if required.
+
 
 # Instantiate the CRUD object for users
 user = CRUDUser(User)

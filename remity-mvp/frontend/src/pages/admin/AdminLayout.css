@@ -1,0 +1,52 @@
+.admin-layout {
+  display: flex;
+  min-height: calc(100vh - 60px - 100px); /* Adjust based on header/footer height */
+}
+
+.admin-sidebar {
+  width: 240px;
+  background-color: #f8f9fa; /* Light grey sidebar */
+  padding: 20px;
+  border-right: 1px solid #dee2e6;
+  flex-shrink: 0; /* Prevent sidebar from shrinking */
+}
+
+.admin-sidebar h2 {
+  font-size: 1.4em;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 10px;
+}
+
+.admin-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-sidebar li {
+  margin-bottom: 10px;
+}
+
+.admin-sidebar a {
+  text-decoration: none;
+  color: #007bff;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.admin-sidebar a:hover,
+.admin-sidebar a.active { /* Add 'active' class logic with router */
+  background-color: #e2e6ea;
+  color: #0056b3;
+}
+
+.admin-content {
+  flex-grow: 1;
+  padding: 30px;
+  background-color: #ffffff;
+}

@@ -1,0 +1,104 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile # Specify the Dockerfile
+    container_name: remity_backend_dev
+    # Use entrypoint script to run migrations then start server
+    entrypoint: /app/entrypoint.sh
+    # Default command if entrypoint succeeds (will be run by entrypoint script)
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      # Mount the backend code directory into the container for development changes
+      - ./backend:/app
+    ports:
+      # Map host port 8001 to container port 8000 to avoid conflicts
+      - "8001:8000"
+    env_file:
+      # Load environment variables from the .env file in the backend directory
+      - ./backend/.env
+    depends_on:
+      # Ensure db and redis start before the backend
+      db:
+        condition: service_healthy # Wait for db healthcheck
+      redis:
+        condition: service_healthy # Wait for redis healthcheck
+    networks:
+      - remity_network
+    # Add healthcheck for backend if needed later
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile # Specify the Dockerfile
+    container_name: remity_frontend_dev
+    volumes:
+      # Mount frontend code for development changes
+      - ./frontend:/app
+      # Persist node_modules separately to avoid overwriting by host mount
+      - /app/node_modules
+    ports:
+      # Map host port 3000 to container port 3000
+      - "3000:3000"
+    environment:
+      # Ensure hot-reloading works well in Docker
+      - WATCHPACK_POLLING=true
+      # Pass API URL to React app (can be overridden by .env.local)
+      - REACT_APP_API_BASE_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend # Frontend depends on backend being available (though requests might fail initially)
+    networks:
+      - remity_network
+    # Command to start the React development server
+    command: npm start
+
+  db:
+    image: postgres:15-alpine # Use a specific, stable version
+    container_name: remity_db_dev
+    volumes:
+      # Use a named volume for persistent data storage
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      # Read credentials from the .env file (or use defaults if not set)
+      # Note: Docker Compose v2+ automatically reads .env in the project root
+      # If using older versions or for clarity, explicitly reference via env_file or here
+      POSTGRES_USER: ${POSTGRES_USER:-remityuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-remitypassword}
+      POSTGRES_DB: ${POSTGRES_DB:-remitydb}
+    ports:
+      # Expose PostgreSQL port to the host (optional, for direct access)
+      - "5432:5432"
+    networks:
+      - remity_network
+    healthcheck:
+      # Check if PostgreSQL is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s # Check every 10 seconds
+      timeout: 5s   # Wait up to 5 seconds for the check
+      retries: 5    # Retry 5 times before marking as unhealthy
+
+  redis:
+    image: redis:7-alpine # Use a specific, stable version
+    container_name: remity_redis_dev
+    ports:
+      # Expose Redis port to the host (optional, for direct access)
+      # Map host port 6380 to container port 6379 to avoid conflicts
+      - "6380:6379"
+    networks:
+      - remity_network
+    healthcheck:
+      # Check if Redis server is responding to ping
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  # Define the named volume for PostgreSQL data
+  postgres_data:
+    driver: local
+
+networks:
+  # Define the network for services to communicate
+  remity_network:
+    driver: bridge

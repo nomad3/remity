@@ -3,9 +3,10 @@ from sqlalchemy import String, func, ForeignKey, Text, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB, INET
 from datetime import datetime
+# Import Optional for type hinting
+from typing import TYPE_CHECKING, Optional
 
 from app.db.base_class import Base
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .user import User
 
@@ -29,7 +30,8 @@ class AuditLog(Base):
     )
 
     # Relationship
-    user: Mapped["User" | None] = relationship(back_populates="audit_logs")
+    # Correct type hint using Optional for the forward reference string
+    user: Mapped[Optional["User"]] = relationship(back_populates="audit_logs")
 
     def __repr__(self):
         user_info = f"user_id={self.user_id}" if self.user_id else "system"

@@ -4,9 +4,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from datetime import datetime
 from decimal import Decimal
+# Import Optional for type hinting
+from typing import TYPE_CHECKING, Optional
 
 from app.db.base_class import Base
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .transaction import Transaction
 
@@ -30,7 +31,8 @@ class InternalLedgerEntry(Base):
     )
 
     # Relationship
-    transaction: Mapped["Transaction" | None] = relationship(back_populates="ledger_entries")
+    # Correct type hint using Optional for the forward reference string
+    transaction: Mapped[Optional["Transaction"]] = relationship(back_populates="ledger_entries")
 
     def __repr__(self):
         return f"<InternalLedgerEntry(id={self.id}, event='{self.event_type}', amount={self.amount} {self.currency})>"

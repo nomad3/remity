@@ -1,5 +1,6 @@
 import os
-from typing import List, Union, Optional
+# Import Any from typing
+from typing import List, Union, Optional, Any
 from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
@@ -32,8 +33,8 @@ class Settings(BaseSettings):
             username=values.data.get("POSTGRES_USER"),
             password=values.data.get("POSTGRES_PASSWORD"),
             host=values.data.get("POSTGRES_HOST"),
-            port=str(values.data.get("POSTGRES_PORT")),
-            path=f"/{values.data.get('POSTGRES_DB') or ''}",
+            port=values.data.get("POSTGRES_PORT"), # Pass port as integer
+            path=f"{values.data.get('POSTGRES_DB') or ''}", # Remove leading slash from path
         )
 
     # Redis Cache
@@ -50,7 +51,7 @@ class Settings(BaseSettings):
         return RedisDsn.build(
             scheme="redis",
             host=values.data.get("REDIS_HOST"),
-            port=str(values.data.get("REDIS_PORT")),
+            port=values.data.get("REDIS_PORT"), # Pass port as integer
             path=f"/{values.data.get('REDIS_DB') or 0}",
         )
 

@@ -7,7 +7,7 @@ services:
     # Use entrypoint script to run migrations then start server
     entrypoint: /app/entrypoint.sh
     # Default command if entrypoint succeeds (will be run by entrypoint script)
-    # command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # Uncommented command
     volumes:
       # Mount the backend code directory into the container for development changes
       - ./backend:/app

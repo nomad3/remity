@@ -1,19 +1,24 @@
 import React from 'react';
 import './App.css'; // Basic styling
+import Header from './components/Header';
+import HeroSection from './components/HeroSection';
+import FeaturesSection from './components/FeaturesSection';
+import CalculatorSection from './components/CalculatorSection';
+import Footer from './components/Footer';
 
 function App() {
+  // Basic structure for a landing page
+  // TODO: Implement routing for login, signup, dashboard etc.
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Welcome to Remity.io</h1>
-        <p>
-          Frontend development in progress...
-        </p>
-        {/* TODO: Add Routing (React Router) */}
-        {/* TODO: Add Components (Login, Register, Dashboard, etc.) */}
-        {/* TODO: Add State Management (Context API / Zustand) */}
-        {/* TODO: Add API Service Layer (axios) */}
-      </header>
+      <Header />
+      <main className="main-content">
+        <HeroSection />
+        <CalculatorSection />
+        <FeaturesSection />
+        {/* Add other sections like Testimonials, How it Works, etc. */}
+      </main>
+      <Footer />
     </div>
   );
 }

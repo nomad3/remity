@@ -19,4 +19,8 @@ h1 {
   color: #007bff; /* Primary blue color */
 }
 
+.main-content {
+  flex-grow: 1; /* Allows footer to be pushed down */
+}
+
 /* Add more styles as needed */

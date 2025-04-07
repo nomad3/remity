@@ -191,10 +191,11 @@ The application includes admin-only endpoints (e.g., for transaction approval) p
     ```bash
     docker-compose up -d
     ```
-2.  **Run the Creation Script:** Execute the `initial_data.py` script inside the running `backend` container using `docker-compose exec`. Replace the email and password with your desired admin credentials:
+2.  **Run the Creation Script:** Execute the `initial_data.py` script *as a module* inside the running `backend` container using `docker-compose exec`. Replace the email and password with your desired admin credentials:
     ```bash
-    docker-compose exec backend python app/initial_data.py --email your_admin_email@example.com --password YourSecurePassword123
+    docker-compose exec backend python -m app.initial_data --email your_admin_email@example.com --password YourSecurePassword123
     ```
+    *   Using `python -m app.initial_data` ensures Python correctly recognizes the `app` directory as a package, resolving import errors.
     *   This script will either create a new user with the given credentials and mark them as a superuser, or update an existing user with that email to be a superuser.
     *   Choose a strong password (minimum 8 characters enforced by the script).
 3.  **Log In:** You can now log in via the frontend (`http://localhost:3000/login`) or API (`http://localhost:8001/api/v1/auth/login`) using the admin credentials you just created. Requests made with this user's token will have superuser privileges.

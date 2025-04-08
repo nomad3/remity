@@ -1,10 +1,9 @@
-#!/bin/sh
+#!/bin/bash
+# Basic entrypoint script
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+echo "Entrypoint script started..."
 
 # Wait for the database to be ready
-# Use environment variables defined in docker-compose.yml
 echo "Waiting for database at ${POSTGRES_HOST}:${POSTGRES_PORT}..."
 
 # Function to check DB readiness
@@ -12,44 +11,46 @@ check_db() {
     pg_isready -h "${POSTGRES_HOST}" -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -q
 }
 
-# Wait for the DB server itself to be ready first (without specifying DB name)
+# Wait for the DB server itself
 while ! pg_isready -h "${POSTGRES_HOST}" -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -q; do
   echo "PostgreSQL server is unavailable - sleeping"
   sleep 1
 done
 echo "PostgreSQL server is up."
 
-# Check if the specific database exists and is ready
+# Check/Create/Wait for specific DB
 if ! check_db; then
     echo "Database '${POSTGRES_DB}' not found or not ready. Attempting to create..."
-    # Use PGPASSWORD for createdb if user has password authentication configured
     export PGPASSWORD="${POSTGRES_PASSWORD}"
-    # Attempt creation - script will exit if this fails and DB doesn't exist
     createdb -h "${POSTGRES_HOST}" -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" "${POSTGRES_DB}"
     echo "Database creation command executed (or database already existed)."
     unset PGPASSWORD
-
-    # Add a small delay after creation attempt before checking again
     sleep 2
-
-    # Wait again specifically for the database after attempting creation
     echo "Waiting for database '${POSTGRES_DB}' to become ready after creation attempt..."
     while ! check_db; do
       echo "Database '${POSTGRES_DB}' is still unavailable - sleeping"
       sleep 1
     done
 fi
-
-echo "Database '${POSTGRES_DB}' is ready - executing command"
+echo "Database '${POSTGRES_DB}' is ready."
 
 # Apply database migrations
-echo "Applying database migrations..."
-# Ensure alembic can find the config relative to the app directory
-# The working directory is /app as set in the Dockerfile
-alembic -c /app/alembic.ini upgrade head
+# Check if the users table exists
+echo "Checking if the users table exists..."
+PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${POSTGRES_HOST}" -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -tAc "SELECT 1 FROM pg_tables WHERE tablename='users'" | grep -q 1
+if [ $? -eq 0 ]; then
+  echo "Users table exists."
+else
+  echo "Users table does not exist. Applying database migrations..."
+  alembic -c /app/alembic.ini upgrade head
+  echo "Migrations applied."
+fi
 
-echo "Migrations applied."
+# Run initial data script
+echo "Running initial data script..."
+python -m app.initial_data --email admin@remity.io --password simon144610
+echo "Initial data script completed."
 
-# Execute the main container command (passed as arguments to this script)
+# Execute the main container command
 echo "Starting application: exec $@"
-exec "$@"
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

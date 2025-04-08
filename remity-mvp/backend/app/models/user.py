@@ -1,12 +1,22 @@
 import uuid
 from sqlalchemy import String, Text, func, Enum as SQLAlchemyEnum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+# Import foreign from sqlalchemy.orm
+from sqlalchemy.orm import Mapped, mapped_column, relationship, foreign
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.sql import expression
 from datetime import datetime
 import enum
+# Import TYPE_CHECKING and List
+from typing import TYPE_CHECKING, List
 
 from app.db.base_class import Base
+
+# Import Transaction model only for type checking to avoid circular imports
+if TYPE_CHECKING:
+    from .transaction import Transaction
+    from .recipient import Recipient
+    from .audit_log import AuditLog
+
 
 class KYCStatus(str, enum.Enum):
     PENDING = "pending"
@@ -46,8 +56,19 @@ class User(Base):
 
     # Relationships
     recipients: Mapped[list["Recipient"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
-    audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")
+    # Explicitly define foreign_keys to resolve ambiguity
+    transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction",
+        back_populates="user",
+        foreign_keys="[Transaction.user_id]"  # Explicitly define the FK
+    )
+    # Add relationship for transactions reviewed by this user (if they are an admin)
+    reviewed_transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction",
+        back_populates="reviewer",
+        foreign_keys="[Transaction.reviewed_by_user_id]"  # Explicitly define the FK
+    )
+    audit_logs: Mapped[List["AuditLog"]] = relationship(back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', kyc_status='{self.kyc_status}')>"

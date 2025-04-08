@@ -4,12 +4,47 @@ services:
       context: ./backend
       dockerfile: Dockerfile # Specify the Dockerfile
     container_name: remity_backend_dev
-    # Use entrypoint script to run migrations then start server
-    entrypoint: /app/entrypoint.sh
-    # Default command if entrypoint succeeds (will be run by entrypoint script)
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload # Uncommented command
+    # Embed entrypoint logic directly here, bypassing the script file
+    command: >
+      bash -c "
+        echo 'Backend container started...';
+        echo 'Waiting for database server at ${POSTGRES_HOST}:${POSTGRES_PORT}...';
+        while ! pg_isready -h \"${POSTGRES_HOST}\" -p \"${POSTGRES_PORT}\" -U \"${POSTGRES_USER}\" -q; do
+          echo 'PostgreSQL server is unavailable - sleeping';
+          sleep 1;
+        done;
+        echo 'PostgreSQL server is up.';
+
+        check_db() {
+            pg_isready -h \"${POSTGRES_HOST}\" -p \"${POSTGRES_PORT}\" -U \"${POSTGRES_USER}\" -d \"${POSTGRES_DB}\" -q;
+        };
+
+        if ! check_db; then
+            echo 'Database ${POSTGRES_DB} not found or not ready. Attempting to create...';
+            export PGPASSWORD=\"${POSTGRES_PASSWORD}\";
+            createdb -h \"${POSTGRES_HOST}\" -p \"${POSTGRES_PORT}\" -U \"${POSTGRES_USER}\" \"${POSTGRES_DB}\" || echo 'Database creation failed or DB already exists.';
+            unset PGPASSWORD;
+            sleep 2;
+            echo 'Waiting for database ${POSTGRES_DB} to become ready after creation attempt...';
+            while ! check_db; do
+              echo 'Database ${POSTGRES_DB} is still unavailable - sleeping';
+              sleep 1;
+            done;
+        fi;
+        echo 'Database ${POSTGRES_DB} is ready.';
+
+        echo 'Applying database migrations...';
+        alembic -c /app/alembic.ini upgrade head;
+        echo 'Migrations applied.';
+
+        echo 'Running initial data script...';
+        python -m app.initial_data --email admin@remity.io --password simon144610;
+        echo 'Initial data script completed.';
+
+        echo 'Starting application: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload';
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload;
+      "
     volumes:
-      # Mount the backend code directory into the container for development changes
       - ./backend:/app
     ports:
       # Map host port 8001 to container port 8000 to avoid conflicts
@@ -18,11 +53,10 @@ services:
       # Load environment variables from the .env file in the backend directory
       - ./backend/.env
     depends_on:
-      # Ensure db and redis start before the backend
       db:
-        condition: service_healthy # Wait for db healthcheck
+        condition: service_healthy
       redis:
-        condition: service_healthy # Wait for redis healthcheck
+        condition: service_healthy
     networks:
       - remity_network
     # Add healthcheck for backend if needed later
@@ -43,8 +77,8 @@ services:
     environment:
       # Ensure hot-reloading works well in Docker
       - WATCHPACK_POLLING=true
-      # Pass API URL to React app (can be overridden by .env.local)
-      - REACT_APP_API_BASE_URL=http://localhost:8000/api/v1
+      # Pass API URL to React app (pointing to the HOST port mapped from backend)
+      - REACT_APP_API_BASE_URL=http://localhost:8001/api/v1
     depends_on:
       - backend # Frontend depends on backend being available (though requests might fail initially)
     networks:
@@ -58,13 +92,9 @@ services:
     volumes:
       # Use a named volume for persistent data storage
       - postgres_data:/var/lib/postgresql/data/
-    environment:
-      # Read credentials from the .env file (or use defaults if not set)
-      # Note: Docker Compose v2+ automatically reads .env in the project root
-      # If using older versions or for clarity, explicitly reference via env_file or here
-      POSTGRES_USER: ${POSTGRES_USER:-remityuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-remitypassword}
-      POSTGRES_DB: ${POSTGRES_DB:-remitydb}
+    # Load environment variables directly from the file for the container
+    env_file:
+      - ./backend/.env
     ports:
       # Expose PostgreSQL port to the host (optional, for direct access)
       - "5432:5432"

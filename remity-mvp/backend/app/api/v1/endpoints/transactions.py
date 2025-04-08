@@ -222,15 +222,21 @@ async def read_transactions(
     db: AsyncSession = Depends(dependencies.get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
-    current_user: models.User = Depends(dependencies.get_current_active_user), # Any active user can view their history
+    current_user: models.User = Depends(dependencies.get_current_active_user), # Any active user can call
 ) -> List[models.Transaction]:
     """
-    Retrieve transaction history for the current logged-in user.
+    Retrieve transaction history.
+    - If the user is a superuser, retrieves all transactions.
+    - Otherwise, retrieves only the transactions for the current logged-in user.
     """
-    logger.info(f"User {current_user.email} fetching transactions (skip={skip}, limit={limit})")
-    transactions = await crud.transaction.get_multi_by_owner(
-        db=db, user_id=current_user.id, skip=skip, limit=limit
-    )
+    if crud.user.is_superuser(current_user):
+        logger.info(f"Admin user {current_user.email} fetching all transactions (skip={skip}, limit={limit})")
+        transactions = await crud.transaction.get_multi(db=db, skip=skip, limit=limit)
+    else:
+        logger.info(f"User {current_user.email} fetching their transactions (skip={skip}, limit={limit})")
+        transactions = await crud.transaction.get_multi_by_owner(
+            db=db, user_id=current_user.id, skip=skip, limit=limit
+        )
     return transactions
 
 

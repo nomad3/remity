@@ -19,7 +19,8 @@ interface AuthContextType {
   // register: (userData) => Promise<void>; // Add register function later
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Export the context
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;

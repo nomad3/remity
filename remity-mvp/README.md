@@ -88,7 +88,8 @@ remity-mvp/
     ```bash
     docker-compose up --build -d
     ```
-    *   `--build`: Forces Docker to rebuild the images if Dockerfiles have changed.
+    *   `--build`: Rebuilds images if their source files (Dockerfile, code) have changed.
+    *   **Troubleshooting:** If you encounter errors during startup (especially related to `entrypoint.sh`), try building without cache: `docker-compose build --no-cache backend` followed by `docker-compose up -d`.
     *   `-d`: Runs containers in detached mode (in the background).
 
     This command will:
@@ -115,8 +116,9 @@ remity-mvp/
 
 ## Environment Variables
 
-*   **Backend (`backend/.env`):** Critical for database connection, JWT secrets, CORS origins, and external API keys. **MUST** be created from `.env.example` and populated with valid credentials (use test keys for development). **NEVER** commit the `.env` file. Key variables include:
-    *   `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT`
+*   **Root (`./.env`):** Contains variables needed by `docker-compose.yml` itself for variable substitution (primarily for the backend's startup command). Create this file and copy the `POSTGRES_*` variables from `backend/.env.example` into it. **NEVER** commit this file if it contains sensitive defaults (though in this case, they are development defaults).
+*   **Backend (`backend/.env`):** Contains runtime secrets and configuration loaded directly by the backend container (via `env_file`). Critical for JWT secrets, external API keys, etc. **MUST** be created from `backend/.env.example` and populated. **NEVER** commit this file. Key variables include:
+    *   `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT` (Can be duplicated from root `.env` for clarity)
     *   `REDIS_HOST`, `REDIS_PORT`
     *   `JWT_SECRET_KEY` (Generate securely!)
     *   `BACKEND_CORS_ORIGINS` (e.g., `["http://localhost:3000"]`)

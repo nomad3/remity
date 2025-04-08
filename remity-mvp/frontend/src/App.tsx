@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 // Import pages
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage'; // Import Dashboard
 import TransactionHistoryPage from './pages/TransactionHistoryPage'; // Import History Page
 // import DashboardPage from './pages/DashboardPage'; // Placeholder
 import AdminLayout from './pages/admin/AdminLayout';
@@ -41,8 +42,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            {/* TODO: Add protected route for dashboard */}
-            {/* <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> */}
+            {/* Add protected route for dashboard */}
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><TransactionHistoryPage /></ProtectedRoute>} /> {/* Add History Route */}
 
             {/* Admin Panel Routes - Wrapped in ProtectedRoute */}

@@ -46,7 +46,8 @@ async def get_current_user(
         logger.error(f"Unexpected error decoding token: {e}", exc_info=True)
         raise credentials_exception
 
-    user = await crud_user.user.get_by_email(db, email=user_email)
+    # Corrected: Call method directly on the crud_user instance
+    user = await crud_user.get_by_email(db, email=user_email)
     if user is None:
         logger.warning(f"User not found for email '{user_email}' from token.")
         raise credentials_exception
@@ -59,7 +60,8 @@ async def get_current_active_user(
     """
     Dependency to get the current user and ensure they are active.
     """
-    if not crud_user.user.is_active(current_user):
+    # Corrected: Call method directly on the crud_user instance
+    if not crud_user.is_active(current_user):
         logger.warning(f"Inactive user attempted access: {current_user.email}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return current_user
@@ -71,7 +73,8 @@ async def get_current_active_superuser(
     """
     Dependency to get the current active user and ensure they are a superuser.
     """
-    if not crud_user.user.is_superuser(current_user):
+    # Corrected: Call method directly on the crud_user instance
+    if not crud_user.is_superuser(current_user):
         logger.warning(f"Non-superuser attempted admin access: {current_user.email}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

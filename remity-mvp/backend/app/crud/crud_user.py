@@ -69,15 +69,25 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     ) -> Optional[User]:
         """ Authenticate a user by email and password. """
         user = await self.get_by_email(db, email=email)
+        logger.debug(f"Attempting authentication for email: {email}")
+        user = await self.get_by_email(db, email=email)
         if not user:
             logger.warning(f"Authentication failed: User not found for email {email}")
             return None
+        logger.debug(f"User found: {user.email} (Active: {user.is_active})")
         if not user.is_active:
             logger.warning(f"Authentication failed: User {email} is inactive.")
             return None
-        if not verify_password(password, user.hashed_password):
+
+        # Log password verification attempt
+        logger.debug(f"Verifying password for user {email}. Provided password length: {len(password)}, Stored hash: {user.hashed_password}")
+        password_verified = verify_password(password, user.hashed_password)
+        logger.debug(f"Password verification result for {email}: {password_verified}")
+
+        if not password_verified:
             logger.warning(f"Authentication failed: Invalid password for user {email}")
             return None
+
         logger.info(f"Authentication successful for user {email}")
         return user
 

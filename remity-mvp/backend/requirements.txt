@@ -8,6 +8,7 @@ alembic>=1.11.0,<1.14.0 # For database migrations
 
 # Authentication & Security
 passlib[bcrypt]>=1.7.4,<1.8.0
+bcrypt>=4.0,<4.2 # Add explicit bcrypt dependency
 python-jose[cryptography]>=3.3.0,<3.4.0
 
 # Redis Cache

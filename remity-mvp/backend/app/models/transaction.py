@@ -78,11 +78,17 @@ class Transaction(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="transactions", foreign_keys=[user_id])
+    # Explicitly define foreign_keys for relationships back to User
+    user: Mapped["User"] = relationship(
+        back_populates="transactions",
+        foreign_keys=[user_id] # Keep using column object here for back_populates side
+    )
     recipient: Mapped["Recipient"] = relationship(back_populates="transactions")
     ledger_entries: Mapped[list["InternalLedgerEntry"]] = relationship(back_populates="transaction")
-    # Correct type hint using Optional for the forward reference string
-    reviewer: Mapped[Optional["User"]] = relationship(foreign_keys=[reviewed_by_user_id]) # Relationship for reviewer
+    reviewer: Mapped[Optional["User"]] = relationship(
+        back_populates="reviewed_transactions", # Add back_populates
+        foreign_keys=[reviewed_by_user_id] # Keep using column object here for back_populates side
+    )
 
     def __repr__(self):
         return f"<Transaction(id={self.id}, user_id={self.user_id}, status='{self.status}', {self.source_currency}->{self.target_currency})>"

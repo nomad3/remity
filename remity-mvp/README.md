@@ -10,8 +10,8 @@ This repository contains the Minimum Viable Product (MVP) for Remity.io, a platf
 *   **Recipient Management:** Users can save and manage recipient details.
 *   **Transaction Quoting:** Provides estimated exchange rates, fees, and delivery times before sending.
 *   **Transaction Creation:** Initiates the remittance process, including payment intent creation (e.g., via Stripe).
-*   **Transaction History:** Users can view their past transactions.
-*   **Dockerized Environment:** Uses Docker Compose for easy local development setup with automatic database migrations.
+*   **Transaction History / Dashboard:** Users can view their past transactions on the dashboard. Admins see all transactions.
+*   **Dockerized Environment:** Uses Docker Compose for easy local development setup with automatic database migrations and initial superuser creation.
 *   **Manual Approval Workflow:** Includes an admin step to approve/reject transactions before processing.
 
 ## Tech Stack
@@ -46,13 +46,16 @@ remity-mvp/
 │   ├── .env.example  # Example environment variables
 │   ├── alembic.ini   # Alembic configuration
 │   ├── Dockerfile    # Backend Docker image definition
-│   ├── entrypoint.sh # Script to run migrations and start app
 │   ├── pytest.ini    # Pytest configuration
-│   └── requirements.txt
+│   └── requirements.txt # NOTE: entrypoint.sh removed, logic moved to docker-compose
 ├── frontend/         # React application
 │   ├── public/       # Static assets, index.html
 │   ├── src/          # React components, pages, services, etc.
-│   │   └── components/ # Homepage components added
+│   │   ├── components/ # Reusable UI parts
+│   │   ├── contexts/   # React Context (e.g., AuthContext)
+│   │   ├── pages/      # Top-level page components (Login, Register, Dashboard, Admin...)
+│   │   ├── services/   # API interaction logic
+│   │   └── App.tsx     # Main application component with routing
 │   ├── .env.example  # Example environment variables for React
 │   ├── .gitignore
 │   ├── Dockerfile    # Frontend Docker image definition
@@ -84,69 +87,76 @@ remity-mvp/
     *   **Frontend:** Copy `frontend/.env.example` to `frontend/.env.local`. Update `REACT_APP_STRIPE_PUBLISHABLE_KEY` if needed. (`.env.local` is gitignored).
 
 3.  **Build and Run Services:**
-    Use Docker Compose to build the images and start the containers:
+    Use Docker Compose to build the images and start the containers (ensure you are in the `remity-mvp` directory):
     ```bash
+    # Build images and start containers in detached mode
     docker-compose up --build -d
     ```
-    *   `--build`: Rebuilds images if their source files (Dockerfile, code) have changed.
-    *   **Troubleshooting:** If you encounter errors during startup (especially related to `entrypoint.sh`), try building without cache: `docker-compose build --no-cache backend` followed by `docker-compose up -d`.
+    *   `--build`: Rebuilds images if their source files (Dockerfile, code) have changed. Use `docker-compose build --no-cache` if you suspect caching issues.
     *   `-d`: Runs containers in detached mode (in the background).
 
     This command will:
     *   Build the `backend` and `frontend` Docker images.
     *   Start containers for `backend`, `frontend`, `db` (PostgreSQL), and `redis`.
-    *   The `backend` container's entrypoint script will wait for the database, apply Alembic migrations automatically (`alembic upgrade head`), and then start the FastAPI server.
+    *   The `backend` container's `command` in `docker-compose.yml` will:
+        *   Wait for the database to be ready.
+        *   Apply Alembic migrations automatically (`alembic upgrade head`).
+        *   Run the initial data script (`app.initial_data`) to create the default admin user (`admin@remity.io` / `simon144610`).
+        *   Start the FastAPI server using Uvicorn.
     *   The `frontend` container will install npm dependencies (if not already cached in the image) and start the React development server.
 
 4.  **Accessing Services:**
-    *   **Backend API:** `http://localhost:8001` (Note: Port changed from 8000 due to potential conflicts)
-    *   **Backend API Docs (Swagger):** `http://localhost:8001/api/v1/docs`
+    *   **Backend API:** `http://localhost:8001` (Mapped from container port 8000)
+    *   **Backend API Docs (Swagger):** `http://localhost:8001/docs` (FastAPI default) or `/api/v1/docs` if prefix applied correctly.
     *   **Frontend App:** `http://localhost:3000`
-    *   **Redis (from host):** `localhost:6380` (Note: Port changed from 6379)
+    *   **Redis (from host):** `localhost:6380` (Mapped from container port 6379)
+    *   **PostgreSQL (from host):** `localhost:5432` (Use user/pass/db from `.env`)
 
 5.  **Stopping Services:**
     ```bash
     docker-compose down
     ```
-    To stop and remove volumes (like the database data):
+    To stop and remove volumes (like the database data), ensure you are in the `remity-mvp` directory:
     ```bash
     docker-compose down -v
     ```
-    *(This removes containers, networks, and the database volume)*
 
 ## Environment Variables
 
 *   **Root (`./.env`):** Contains variables needed by `docker-compose.yml` itself for variable substitution (primarily for the backend's startup command). Create this file and copy the `POSTGRES_*` variables from `backend/.env.example` into it. **NEVER** commit this file if it contains sensitive defaults (though in this case, they are development defaults).
 *   **Backend (`backend/.env`):** Contains runtime secrets and configuration loaded directly by the backend container (via `env_file`). Critical for JWT secrets, external API keys, etc. **MUST** be created from `backend/.env.example` and populated. **NEVER** commit this file. Key variables include:
-    *   `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT` (Can be duplicated from root `.env` for clarity)
+    *   `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_HOST`, `POSTGRES_PORT`
     *   `REDIS_HOST`, `REDIS_PORT`
     *   `JWT_SECRET_KEY` (Generate securely!)
-    *   `BACKEND_CORS_ORIGINS` (e.g., `["http://localhost:3000"]`)
+    *   `BACKEND_CORS_ORIGINS` (e.g., `["http://localhost:3000", "http://127.0.0.1:3000"]`)
     *   `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
     *   `BINANCE_API_KEY`, `BINANCE_API_SECRET` (For exchange rates)
     *   `KYC_PROVIDER_API_KEY`, `KYC_PROVIDER_WEBHOOK_SECRET` (e.g., Onfido, Veriff)
     *   `OFFRAMP_PROVIDER_API_KEY`, `OFFRAMP_PROVIDER_WEBHOOK_SECRET` (e.g., Arcus, Xendit)
 *   **Frontend (`frontend/.env.local`):** Used for frontend-specific variables. Create from `.env.example`. Key variables include:
-    *   `REACT_APP_API_BASE_URL` (Should point to the backend, e.g., `http://localhost:8001/api/v1`)
+    *   `REACT_APP_API_BASE_URL` (Should point to the backend's *host* port, e.g., `http://localhost:8001/api/v1`)
     *   `REACT_APP_STRIPE_PUBLISHABLE_KEY`
 
 ## Database Migrations (Alembic)
 
-Migrations are handled automatically on container startup by the `backend/entrypoint.sh` script (`alembic upgrade head`).
+Migrations are handled automatically on container startup by the `command:` directive in `docker-compose.yml` (`alembic upgrade head`).
 
 To manually generate a new migration after changing SQLAlchemy models (`backend/app/models/`):
 
 1.  Ensure the containers are running (`docker-compose up -d`).
-2.  Execute the Alembic revision command inside the running backend container:
+2.  Execute the Alembic revision command inside the running backend container, specifying the compose file if not in the `remity-mvp` directory:
     ```bash
-    docker-compose exec backend alembic revision --autogenerate -m "Your migration message"
+    # From remity-mvp directory:
+    docker-compose exec backend alembic -c /app/alembic.ini revision --autogenerate -m "Your migration message"
+
+    # Or from parent directory:
+    docker-compose -f remity-mvp/docker-compose.yml exec backend alembic -c /app/alembic.ini revision --autogenerate -m "Your migration message"
     ```
 3.  Review the generated migration script in `backend/alembic/versions/`.
-4.  Restart the backend container to apply the new migration:
+4.  The migration will be applied automatically the next time the backend container starts (e.g., via `docker-compose up --build -d`). You can also apply it manually if needed:
     ```bash
-    docker-compose restart backend
+    docker-compose -f remity-mvp/docker-compose.yml exec backend alembic -c /app/alembic.ini upgrade head
     ```
-    (Alternatively, the migration will be applied automatically the next time you run `docker-compose up`).
 
 ## Running Tests
 
@@ -187,20 +197,25 @@ To manually generate a new migration after changing SQLAlchemy models (`backend/
 
 ## Creating an Admin User
 
-The application includes admin-only endpoints (e.g., for transaction approval) protected by the `get_current_active_superuser` dependency. To create the first admin user:
+The application includes admin-only endpoints (e.g., for transaction approval) protected by the `get_current_active_superuser` dependency.
 
-1.  **Ensure Containers are Running:** Start the application stack if it's not already running:
+**Automatic Creation:**
+The default admin user (`admin@remity.io` / password `simon144610`) is created **automatically** when the backend container starts, as part of the `command:` in `docker-compose.yml`.
+
+**Manual Creation/Update (Optional):**
+If you need to create a different admin user or ensure an existing user is an admin:
+1.  Ensure containers are running (`docker-compose up -d`).
+2.  Execute the `initial_data.py` script inside the `backend` container, specifying the compose file if needed:
     ```bash
-    docker-compose up -d
-    ```
-2.  **Run the Creation Script:** Execute the `initial_data.py` script *as a module* inside the running `backend` container using `docker-compose exec`. Replace the email and password with your desired admin credentials:
-    ```bash
+    # From remity-mvp directory:
     docker-compose exec backend python -m app.initial_data --email your_admin_email@example.com --password YourSecurePassword123
+
+    # Or from parent directory:
+    docker-compose -f remity-mvp/docker-compose.yml exec backend python -m app.initial_data --email your_admin_email@example.com --password YourSecurePassword123
     ```
-    *   Using `python -m app.initial_data` ensures Python correctly recognizes the `app` directory as a package, resolving import errors.
-    *   This script will either create a new user with the given credentials and mark them as a superuser, or update an existing user with that email to be a superuser.
+    *   This script creates the user if they don't exist or updates an existing user to be a superuser.
     *   Choose a strong password (minimum 8 characters enforced by the script).
-3.  **Log In:** You can now log in via the frontend (`http://localhost:3000/login`) or API (`http://localhost:8001/api/v1/auth/login`) using the admin credentials you just created. Requests made with this user's token will have superuser privileges.
+3.  **Log In:** You can log in via the frontend (`http://localhost:3000/login`) or API (`http://localhost:8001/api/v1/auth/login`) using the admin credentials.
 
 ## API Endpoints Overview
 
@@ -214,8 +229,8 @@ The backend exposes API endpoints under `/api/v1/`:
 *   `/recipients/{id}`: Get/Update/Delete a specific recipient.
 *   `/transactions/quote`: Get a transaction quote (rate, fees). Requires verified user.
 *   `/transactions/`: Create a transaction (initiates payment). Requires verified user.
-*   `/transactions/`: List transaction history for the current user.
-*   `/transactions/{id}`: Get details of a specific transaction.
+*   `/transactions/`: List transaction history (all for admin, own for regular user).
+*   `/transactions/{id}`: Get details of a specific transaction (owner only).
 *   `/admin/transactions/pending`: List transactions awaiting manual approval (Admin only).
 *   `/admin/transactions/{id}/approve`: Approve a pending transaction (Admin only).
 *   `/admin/transactions/{id}/reject`: Reject a pending transaction (Admin only).
@@ -248,10 +263,11 @@ The backend exposes API endpoints under `/api/v1/`:
 *   **Testing:** Initial backend unit tests for security and user CRUD, plus a basic frontend component test, are included. Coverage should be significantly expanded.
 *   **Frontend Development:**
     *   **Homepage:** A basic structure with Header, Hero, Features, Calculator, and Footer components is implemented (`frontend/src/components/`).
-    *   **Routing:** Basic routing using `react-router-dom` is set up in `App.tsx` for `/`, `/login`, `/register`, `/history`, and `/admin`.
-    *   **Authentication:** A basic `AuthContext` manages login state, and `LoginPage`, `RegisterPage` provide forms. `ProtectedRoute` component exists for securing routes.
+    *   **Routing:** Routing using `react-router-dom` is set up in `App.tsx` for `/`, `/login`, `/register`, `/dashboard`, `/history`, and `/admin`.
+    *   **Authentication:** `AuthContext` manages login state. `LoginPage`, `RegisterPage` provide forms. `ProtectedRoute` component secures routes.
+    *   **Dashboard:** A basic `DashboardPage` exists, fetching and displaying transactions based on user role.
     *   **Admin Panel:** A placeholder layout (`AdminLayout`) and page (`PendingTransactions`) exist under `/admin`, but require UI implementation and API integration.
-    *   **Needed:** Significant work remains on building functional user dashboard, transaction flow, KYC integration, admin panel UI components, state management (e.g., Zustand), and robust API service calls (`axios`).
+    *   **Needed:** Significant work remains on building the transaction creation flow, KYC integration UI, refining the dashboard, implementing the full admin panel UI/functionality, potentially adding state management (e.g., Zustand), and improving API service calls (`axios`).
 *   **Infrastructure:** Implement the Terraform code in `infra/` to provision necessary GCP resources (VPC, Cloud SQL, MemoryStore, GCE/Cloud Run, Secret Manager, etc.).
 *   **Production Dockerfiles:** Create optimized multi-stage Dockerfiles for production builds (smaller images, non-root users, etc.).
 *   **CI/CD:** Set up a CI/CD pipeline (e.g., GitHub Actions, Cloud Build) for automated testing, building, and deployment.

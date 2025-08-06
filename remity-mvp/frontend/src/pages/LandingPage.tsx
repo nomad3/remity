@@ -15,12 +15,17 @@ const LandingPage: React.FC = () => {
             </header>
             <main className="main-content">
                 <div className="hero-section">
-                    <div className="hero-text">
+                    <div className="hero-background">
+                        <img src="/assets/hero-image.jpg" alt="Global Money Transfer Network" />
+                        <div className="hero-overlay"></div>
+                    </div>
+                    <div className="hero-content">
                         <h1 className="hero-title">The cheap, fast way to send money abroad.</h1>
                         <p className="hero-subtitle">Join over 10 million people who get the real exchange rate with Remity.</p>
-                    </div>
-                    <div className="hero-image">
-                        <img src="/assets/hero-image.jpg" alt="Global Money Transfer Network" />
+                        <div className="hero-cta">
+                            <Link to="/register" className="cta-button-primary">Get Started</Link>
+                            <Link to="/login" className="cta-button-secondary">Sign In</Link>
+                        </div>
                     </div>
                 </div>
             </main>

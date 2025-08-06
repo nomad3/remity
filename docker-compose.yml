@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./remity-mvp/backend
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./remity-mvp/backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db/remity
+      - POSTGRES_SERVER=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=remity
+    depends_on:
+      - db
+
+  frontend:
+    build: ./remity-mvp/frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=remity
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

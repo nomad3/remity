@@ -1,23 +1,26 @@
-# Use an official Node runtime as a parent image
-# Use a version known to be compatible with react-scripts 5
-FROM node:18-alpine
+# Build stage
+FROM node:16-alpine AS build
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
-# Copying these first leverages Docker cache
-COPY package*.json ./
-
-# Install dependencies
-# Use --force if encountering peer dependency issues with older react-scripts versions
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy the rest of the application code
 COPY . .
+RUN npm run build
 
-# React app runs on port 3000
-EXPOSE 3000
+# Production stage - Use Node.js to serve static files
+FROM node:16-alpine
 
-# Default command to start the development server
-CMD ["npm", "start"]
+WORKDIR /app
+
+# Install serve package to serve static files
+RUN npm install -g serve
+
+# Copy built files from build stage
+COPY --from=build /app/build ./build
+
+EXPOSE 80
+
+# Use serve to host the static files
+CMD ["serve", "-s", "build", "-l", "80"]

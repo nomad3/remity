@@ -1,18 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css'; // Basic styling (can be replaced/extended)
 import App from './App';
+import { AuthProvider } from './contexts/AuthContext';
+import './index.css';
 import reportWebVitals from './reportWebVitals';
-import { AuthProvider } from './contexts/AuthContext'; // Import AuthProvider
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Failed to find the root element');
-
-const root = ReactDOM.createRoot(rootElement);
-
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
 root.render(
   <React.StrictMode>
-    <AuthProvider> {/* Wrap App with AuthProvider */}
+    <AuthProvider>
       <App />
     </AuthProvider>
   </React.StrictMode>

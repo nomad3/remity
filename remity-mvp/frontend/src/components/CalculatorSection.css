@@ -1,90 +1,44 @@
 .calculator-section {
-  padding: 60px 0;
-  background-color: #f8f9fa; /* Light grey background */
-  text-align: center;
+    padding: 60px 40px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
 }
 
-.calculator-container {
-  max-width: 700px; /* Narrower container for calculator */
-  margin: 0 auto;
-  padding: 0 20px;
+.calculator-card {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
 }
 
-.calculator-section h2 {
-  font-size: 2.5em;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 40px;
+.currency-input, .currency-output {
+    display: flex;
+    margin-bottom: 20px;
 }
 
-.calculator-box {
-  background-color: #ffffff;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+.currency-input input, .currency-output input {
+    flex-grow: 1;
+    padding: 15px;
+    border: 1px solid #e6e6e6;
+    border-radius: 5px 0 0 5px;
+    font-size: 20px;
 }
 
-.calculator-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end; /* Align bottom of elements */
-  margin-bottom: 25px;
-  gap: 15px;
+.currency-input select, .currency-output select {
+    padding: 15px;
+    border: 1px solid #e6e6e6;
+    border-left: none;
+    border-radius: 0 5px 5px 0;
+    background-color: #f8f8f8;
+    font-size: 20px;
 }
 
-.input-group {
-  flex-grow: 1;
-  text-align: left;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 0.9em;
-  color: #555;
-  font-weight: 500;
-}
-
-.input-group input,
-.currency-select select {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
-  font-size: 1.1em;
-  box-sizing: border-box; /* Include padding and border in element's total width/height */
-}
-
-.input-group input:focus,
-.currency-select select:focus {
-  outline: none;
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.currency-select {
-  min-width: 100px; /* Ensure select has some minimum width */
-}
-
-.currency-select select {
-  appearance: none; /* Basic custom styling */
-  background-color: #e9ecef;
-  cursor: pointer;
-  /* Add background arrow image if desired */
-}
-
-.calculator-details {
-  text-align: left;
-  margin: -15px 0 25px 5px; /* Position between rows */
-  font-size: 0.9em;
-  color: #666;
-}
-
-.calculator-details span {
-  margin-right: 15px;
-}
-
-.btn-calculator {
-  margin-top: 20px;
-  width: 100%; /* Make button full width of calculator box */
+.rate-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.8);
 }

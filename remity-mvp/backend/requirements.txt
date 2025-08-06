@@ -1,40 +1,11 @@
-# Core FastAPI
-fastapi[all]>=0.100.0,<0.112.0 # Includes uvicorn, pydantic, starlette, etc.
-
-# Database (PostgreSQL + SQLAlchemy)
-sqlalchemy[asyncio]>=2.0,<2.1
-psycopg[binary,pool]>=3.1,<3.2 # Use psycopg 3 for performance and async
-alembic>=1.11.0,<1.14.0 # For database migrations
-
-# Authentication & Security
-passlib[bcrypt]>=1.7.4,<1.8.0
-bcrypt>=4.0,<4.2 # Add explicit bcrypt dependency
-python-jose[cryptography]>=3.3.0,<3.4.0
-
-# Redis Cache
-redis[hiredis]>=5.0,<5.1
-
-# HTTP Client for External APIs
-httpx>=0.24.0,<0.28.0
-
-# Configuration Management
-pydantic-settings>=2.0,<2.3
-
-# Stripe API Client
-stripe>=7.0,<9.0 # Check latest stable version compatible with API
-
-# Binance API Client (Official or Community)
-# Example using python-binance (unofficial but popular) - research official/other options if needed
-python-binance>=1.0.17,<1.1.0
-
-# Optional: For KYC/Off-Ramp providers (install specific SDKs)
-# onfido-python>=...
-# veriff-python>=...
-# xendit-python>=...
-
-# Development & Linting (Optional for production image)
-# black>=23.0,<25.0
-# ruff>=0.0.275,<0.5.0
-# pre-commit>=3.0,<4.0
-# pytest>=7.0,<8.0
-# pytest-asyncio>=0.21.0,<0.24.0
+fastapi
+uvicorn
+pydantic[email]
+pydantic-settings
+sqlalchemy
+psycopg2-binary
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+alembic
+greenlet

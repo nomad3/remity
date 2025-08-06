@@ -1,67 +1,74 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-// TODO: Add styling
+import { login } from '../services/api';
+import './Auth.css';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const { login, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const { login: authLogin, fetchUser, user } = useAuth();
+    const navigate = useNavigate();
 
-  // Get the path the user was trying to access before being redirected to login
-  const from = location.state?.from?.pathname || "/dashboard"; // Default to dashboard
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await login(email, password);
+            authLogin(response.data.access_token);
+            // Fetch user data to determine role
+            await fetchUser();
+            // Get the user data directly from the API to check role
+            const userResponse = await fetch('http://localhost:8001/api/v1/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${response.data.access_token}`
+                }
+            });
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                if (userData.is_superuser) {
+                    navigate('/admin');
+                } else {
+                    navigate('/dashboard');
+                }
+            } else {
+                navigate('/dashboard');
+            }
+        } catch (error) {
+            console.error('Login failed', error);
+        }
+    };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError(null);
-    try {
-      await login(email, password);
-      navigate(from, { replace: true }); // Redirect to intended page or dashboard
-    } catch (err) {
-      setError('Login failed. Please check your email and password.');
-      console.error(err);
-    }
-  };
-
-  return (
-    <div style={{ padding: '50px', maxWidth: '400px', margin: 'auto' }}>
-      <h2>Log In</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email">Email:</label><br />
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px' }}
-          />
+    return (
+        <div className="auth-page">
+            <div className="auth-card">
+                <h2>Welcome back</h2>
+                <form onSubmit={handleLogin}>
+                    <div className="input-group">
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label>Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="auth-button">Log in</button>
+                </form>
+                <p>
+                    Don't have an account? <Link to="/register">Sign up</Link>
+                </p>
+            </div>
         </div>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password">Password:</label><br />
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px' }}
-          />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" disabled={isLoading} className="btn btn-primary" style={{ width: '100%' }}>
-          {isLoading ? 'Logging in...' : 'Log In'}
-        </button>
-      </form>
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Don't have an account? <Link to="/register">Sign Up</Link>
-      </p>
-    </div>
-  );
+    );
 };
 
 export default LoginPage;

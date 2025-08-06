@@ -1,44 +1,47 @@
 import axios from 'axios';
 
-// Get the API base URL from environment variables (defined in .env.local or docker-compose)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8001/api/v1'; // Default fallback
-
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1',
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-// Interceptor to add the auth token to requests
-apiClient.interceptors.request.use(
-  (config) => {
-    // Retrieve the token from local storage (or context/state management)
-    const token = localStorage.getItem('accessToken'); // Simple example, use secure storage/context
-    if (token && config.headers) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+export const login = (email: string, password: string) => {
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+    return apiClient.post('/auth/login/access-token', formData, {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+    });
+};
 
-// Optional: Add response interceptor for handling global errors (e.g., 401 Unauthorized)
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      // Handle unauthorized access, e.g., redirect to login, clear tokens
-      console.error("Unauthorized access - 401");
-      // Example: Clear token and redirect (implement logout logic properly)
-      // localStorage.removeItem('accessToken');
-      // window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+export const register = (fullName: string, email: string, password: string) => {
+    return apiClient.post('/users/', {
+        full_name: fullName,
+        email,
+        password,
+    });
+};
 
+export const getTransactions = () => {
+    return apiClient.get('/transactions/');
+};
 
-export default apiClient;
+export const createTransaction = (transactionData: any) => {
+    return apiClient.post('/transactions/', transactionData);
+};
+
+export const getCurrentUser = () => {
+    return apiClient.get('/users/me');
+};
+
+export const getUsers = () => {
+    return apiClient.get('/users/');
+};
+
+export const updateTransaction = (transactionId: number, data: any) => {
+    return apiClient.patch(`/transactions/${transactionId}`, data);
+};

@@ -20,7 +20,7 @@ const LandingPage: React.FC = () => {
                         <p className="hero-subtitle">Join over 10 million people who get the real exchange rate with Remity.</p>
                     </div>
                     <div className="hero-image">
-                        <img src="/assets/globe.webp" alt="Globe" />
+                        <img src="/assets/hero-image.jpg" alt="Global Money Transfer Network" />
                     </div>
                 </div>
             </main>

@@ -63,12 +63,21 @@
 
 .hero-image {
     position: relative;
+    overflow: hidden;
+    border-radius: 20px;
 }
 
 .hero-image img {
     max-width: 500px;
+    width: 100%;
+    height: auto;
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.hero-image img:hover {
+    transform: scale(1.05);
 }
 
 .hero-image::before {

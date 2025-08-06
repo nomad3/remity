@@ -42,3 +42,55 @@
     margin-bottom: 20px;
     color: rgba(255, 255, 255, 0.8);
 }
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .calculator-section {
+        padding: 40px 20px;
+    }
+
+    .calculator-card {
+        padding: 30px 20px;
+    }
+
+    .currency-input input, .currency-output input {
+        font-size: 18px;
+        padding: 12px;
+    }
+
+    .currency-input select, .currency-output select {
+        font-size: 18px;
+        padding: 12px;
+    }
+
+    .rate-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .calculator-section {
+        padding: 30px 15px;
+    }
+
+    .calculator-card {
+        padding: 25px 15px;
+    }
+
+    .currency-input, .currency-output {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .currency-input input, .currency-output input {
+        border-radius: 5px;
+        border: 1px solid #e6e6e6;
+    }
+
+    .currency-input select, .currency-output select {
+        border-radius: 5px;
+        border: 1px solid #e6e6e6;
+    }
+}

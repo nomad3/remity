@@ -110,41 +110,153 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+    .header {
+        padding: 15px 20px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .nav-link {
+        margin-left: 15px;
+        font-size: 14px;
+    }
+
+    .nav-link-primary {
+        margin-left: 15px;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .hero-section {
+        min-height: 100vh;
+    }
+
     .hero-title {
         font-size: 42px;
+        margin-bottom: 20px;
+        line-height: 1.1;
     }
 
     .hero-subtitle {
         font-size: 20px;
+        margin-bottom: 35px;
     }
 
     .hero-cta {
         flex-direction: column;
         align-items: center;
+        gap: 15px;
     }
 
     .cta-button-primary,
     .cta-button-secondary {
         width: 280px;
         text-align: center;
+        padding: 16px 32px;
+        font-size: 16px;
     }
 
     .hero-content {
         padding: 0 30px;
+        max-width: 100%;
+    }
+
+    .features-section {
+        flex-direction: column;
+        padding: 60px 20px;
+        gap: 40px;
+    }
+
+    .feature {
+        max-width: 100%;
+        text-align: center;
     }
 }
 
 @media (max-width: 480px) {
+    .header {
+        padding: 12px 15px;
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+
+    .nav-link {
+        margin-left: 10px;
+        font-size: 13px;
+    }
+
+    .nav-link-primary {
+        margin-left: 10px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
     .hero-title {
-        font-size: 36px;
+        font-size: 32px;
+        margin-bottom: 16px;
     }
 
     .hero-subtitle {
         font-size: 18px;
+        margin-bottom: 30px;
     }
 
     .hero-content {
         padding: 0 20px;
+    }
+
+    .cta-button-primary,
+    .cta-button-secondary {
+        width: 260px;
+        padding: 14px 28px;
+        font-size: 15px;
+    }
+
+    .features-section {
+        padding: 50px 15px;
+        gap: 35px;
+    }
+
+    .feature h3 {
+        font-size: 20px;
+    }
+
+    .feature p {
+        font-size: 14px;
+    }
+
+    .testimonials {
+        flex-direction: column;
+        padding: 50px 15px;
+        gap: 25px;
+    }
+
+    .testimonial-card {
+        max-width: 100%;
+        margin: 0;
+    }
+
+    .how-it-works, .why-choose-us {
+        padding: 50px 15px;
+    }
+
+    .steps {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .step {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .footer {
+        padding: 40px 15px;
+        text-align: center;
     }
 }
 

@@ -455,7 +455,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,7 +463,7 @@
 }
 
 .ud-modal {
-  background: var(--color-surface);
+  background: rgba(13, 18, 34, 0.92);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 0;
@@ -473,6 +473,7 @@
   overflow-y: auto;
   box-shadow: var(--shadow-md);
   color: var(--color-text);
+  backdrop-filter: blur(6px) saturate(120%);
 }
 
 .ud-modal-header {
@@ -503,7 +504,7 @@
 
 .ud-close-btn:hover {
   color: var(--color-text);
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.08);
 }
 
 .ud-form {
@@ -536,7 +537,7 @@
   border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 14px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.10);
   color: var(--color-text);
 }
 
@@ -572,7 +573,7 @@
 }
 
 .ud-form-actions button:first-child:hover {
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.08);
 }
 
 .ud-form-actions button.primary {

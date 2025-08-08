@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface User {
   id: number;
@@ -46,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setUser(null);
+        window.location.href = '/';
     };
 
     useEffect(() => {

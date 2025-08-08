@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: gcr.io/aremko-e51ae/remity-backend
   pullPolicy: IfNotPresent
-  tag: "v13"
+  tag: "v15"
 
 nameOverride: ""
 fullnameOverride: ""

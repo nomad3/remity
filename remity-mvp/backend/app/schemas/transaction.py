@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 from pydantic import BaseModel, AnyUrl, ConfigDict
 from .user import User as UserSchema
 from .recipient import Recipient as RecipientSchema
@@ -31,6 +32,9 @@ class TransactionInDBBase(TransactionBase):
     id: int
     user_id: int
     status: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
 
 class Transaction(TransactionInDBBase):
     pass

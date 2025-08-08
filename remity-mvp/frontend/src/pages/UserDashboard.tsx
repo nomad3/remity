@@ -32,6 +32,7 @@ const UserDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewTransfer, setShowNewTransfer] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [transferForm, setTransferForm] = useState({
     amount: '',
     currency_from: 'USD',
@@ -60,7 +61,6 @@ const UserDashboard: React.FC = () => {
   const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // 1) Create/Save recipient
       const recipientPayload = {
         full_name: transferForm.recipient_name,
         email: transferForm.recipient_email,
@@ -71,13 +71,11 @@ const UserDashboard: React.FC = () => {
       const rcpt = await api.createRecipient(recipientPayload);
       const recipientId = rcpt.data.id;
 
-      // 2) Compute simple quote client-side for now
       const amount = parseFloat(transferForm.amount || '0');
       const fee = Math.max(1, amount * 0.01);
-      const rate = 0.9; // placeholder
+      const rate = 0.9;
       const total = amount + fee;
 
-      // 3) Create transaction
       const txPayload = {
         recipient_id: recipientId,
         amount,
@@ -124,7 +122,11 @@ const UserDashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return '-';
+    const normalized = dateString.replace(' ', 'T');
+    const d = new Date(normalized);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -292,7 +294,7 @@ const UserDashboard: React.FC = () => {
                         </td>
                         <td>{formatDate(transaction.created_at)}</td>
                         <td>
-                          <button className="action-link">View</button>
+                          <button className="action-link" onClick={() => setSelectedTransaction(transaction)}>View</button>
                         </td>
                       </tr>
                     ))}
@@ -306,7 +308,6 @@ const UserDashboard: React.FC = () => {
             <div className="recipients-tab">
               <h2>Saved Recipients</h2>
               <p>Manage your frequently used recipients</p>
-              {/* Recipients management will be implemented here */}
             </div>
           )}
 
@@ -330,49 +331,103 @@ const UserDashboard: React.FC = () => {
       </div>
 
       {showNewTransfer && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>New Transfer</h3>
-            <form onSubmit={handleTransferSubmit}>
-              <div className="form-row">
+        <div className="ud-modal-overlay" onClick={() => setShowNewTransfer(false)}>
+          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ud-modal-header">
+              <h2>New Transfer</h2>
+              <button className="ud-close-btn" onClick={() => setShowNewTransfer(false)}>&times;</button>
+            </div>
+            <form className="ud-form" onSubmit={handleTransferSubmit}>
+              <div className="form-group">
                 <label>Amount</label>
                 <input value={transferForm.amount} onChange={e => setTransferForm({ ...transferForm, amount: e.target.value })} required />
               </div>
-              <div className="form-row">
-                <label>From</label>
-                <select value={transferForm.currency_from} onChange={e => setTransferForm({ ...transferForm, currency_from: e.target.value })}>
-                  <option>USD</option>
-                  <option>EUR</option>
-                </select>
+              <div className="ud-form-row">
+                <div className="form-group">
+                  <label>From</label>
+                  <select value={transferForm.currency_from} onChange={e => setTransferForm({ ...transferForm, currency_from: e.target.value })}>
+                    <option>USD</option>
+                    <option>EUR</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>To</label>
+                  <select value={transferForm.currency_to} onChange={e => setTransferForm({ ...transferForm, currency_to: e.target.value })}>
+                    <option>EUR</option>
+                    <option>USD</option>
+                  </select>
+                </div>
               </div>
-              <div className="form-row">
-                <label>To</label>
-                <select value={transferForm.currency_to} onChange={e => setTransferForm({ ...transferForm, currency_to: e.target.value })}>
-                  <option>EUR</option>
-                  <option>USD</option>
-                </select>
-              </div>
-              <div className="form-row">
+              <div className="form-group">
                 <label>Recipient Name</label>
                 <input value={transferForm.recipient_name} onChange={e => setTransferForm({ ...transferForm, recipient_name: e.target.value })} required />
               </div>
-              <div className="form-row">
-                <label>Recipient Email</label>
-                <input value={transferForm.recipient_email} onChange={e => setTransferForm({ ...transferForm, recipient_email: e.target.value })} />
+              <div className="ud-form-row">
+                <div className="form-group">
+                  <label>Recipient Email</label>
+                  <input value={transferForm.recipient_email} onChange={e => setTransferForm({ ...transferForm, recipient_email: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Bank</label>
+                  <input value={transferForm.recipient_bank} onChange={e => setTransferForm({ ...transferForm, recipient_bank: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Account</label>
+                  <input value={transferForm.recipient_account} onChange={e => setTransferForm({ ...transferForm, recipient_account: e.target.value })} />
+                </div>
               </div>
-              <div className="form-row">
-                <label>Bank</label>
-                <input value={transferForm.recipient_bank} onChange={e => setTransferForm({ ...transferForm, recipient_bank: e.target.value })} />
-              </div>
-              <div className="form-row">
-                <label>Account</label>
-                <input value={transferForm.recipient_account} onChange={e => setTransferForm({ ...transferForm, recipient_account: e.target.value })} />
-              </div>
-              <div className="actions">
-                <button type="submit" className="primary">Create Transfer</button>
+              <div className="ud-form-actions">
                 <button type="button" onClick={() => setShowNewTransfer(false)}>Cancel</button>
+                <button type="submit" className="primary">Create Transfer</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {selectedTransaction && (
+        <div className="ud-modal-overlay" onClick={() => setSelectedTransaction(null)}>
+          <div className="ud-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ud-modal-header">
+              <h2>Transaction Details</h2>
+              <button className="ud-close-btn" onClick={() => setSelectedTransaction(null)}>&times;</button>
+            </div>
+            <div className="ud-form">
+              <div className="form-group">
+                <label>Recipient</label>
+                <div>{selectedTransaction.recipient.full_name}{selectedTransaction.recipient.email ? ` (${selectedTransaction.recipient.email})` : ''}</div>
+              </div>
+              <div className="ud-form-row">
+                <div className="form-group">
+                  <label>Amount Sent</label>
+                  <div>{formatCurrency(selectedTransaction.amount, selectedTransaction.currency_from)}</div>
+                </div>
+                <div className="form-group">
+                  <label>Total Charged</label>
+                  <div>{formatCurrency(selectedTransaction.total_amount, selectedTransaction.currency_from)}</div>
+                </div>
+              </div>
+              <div className="ud-form-row">
+                <div className="form-group">
+                  <label>Exchange Rate</label>
+                  <div>{selectedTransaction.exchange_rate.toFixed(4)}</div>
+                </div>
+                <div className="form-group">
+                  <label>Fee</label>
+                  <div>{formatCurrency(selectedTransaction.fee_amount, selectedTransaction.currency_from)}</div>
+                </div>
+              </div>
+              <div className="ud-form-row">
+                <div className="form-group">
+                  <label>Status</label>
+                  <div className={`status-badge ${getStatusColor(selectedTransaction.status)}`}>{selectedTransaction.status}</div>
+                </div>
+                <div className="form-group">
+                  <label>Created</label>
+                  <div>{formatDate(selectedTransaction.created_at)}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

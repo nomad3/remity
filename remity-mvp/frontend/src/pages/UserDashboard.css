@@ -448,144 +448,150 @@
   transform: translateY(-1px);
 }
 
-/* Modal */
-.modal-overlay {
+/* Modal (scoped to UserDashboard) */
+.ud-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
-.modal {
-  background: white;
-  border-radius: 12px;
+.ud-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   padding: 0;
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
 }
 
-.modal-header {
+.ud-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 24px 0 24px;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 24px;
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 16px;
 }
 
-.modal-header h2 {
-  color: #1f2937;
+.ud-modal-header h2 {
+  color: var(--color-text);
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
-.close-btn {
+.ud-close-btn {
   background: none;
-  border: none;
-  font-size: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 18px;
   cursor: pointer;
-  color: #6b7280;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--color-text-muted);
+  padding: 2px 8px;
 }
 
-.close-btn:hover {
-  color: #374151;
+.ud-close-btn:hover {
+  color: var(--color-text);
+  background: rgba(255,255,255,0.06);
 }
 
-.transfer-form {
-  padding: 0 24px 24px 24px;
+.ud-form {
+  padding: 0 20px 20px 20px;
 }
 
-.form-row {
+.ud-form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   margin-bottom: 16px;
 }
 
-.transfer-form .form-group {
+.ud-form .form-group {
   margin-bottom: 16px;
 }
 
-.transfer-form label {
+.ud-form label {
   display: block;
-  color: #374151;
+  color: var(--color-text-muted);
   margin-bottom: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
-.transfer-form input,
-.transfer-form select {
+.ud-form input,
+.ud-form select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
   font-size: 14px;
-  background: white;
-  color: #1f2937;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
 }
 
-.transfer-form input:focus,
-.transfer-form select:focus {
+.ud-form input:focus,
+.ud-form select:focus {
   outline: none;
-  border-color: #00b9ff;
-  box-shadow: 0 0 0 2px rgba(0, 185, 255, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 185, 255, 0.25);
 }
 
-.form-actions {
+.ud-form-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
 }
 
-.form-actions button {
+.ud-form-actions button {
   padding: 10px 20px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 14px;
 }
 
-.form-actions button:first-child {
-  background: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
+.ud-form-actions button:first-child {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
-.form-actions button:first-child:hover {
-  background: #f9fafb;
+.ud-form-actions button:first-child:hover {
+  background: rgba(255,255,255,0.06);
 }
 
-.form-actions button.primary {
-  background: #00b9ff;
+.ud-form-actions button.primary {
+  background: var(--color-primary);
   color: white;
   border: none;
 }
 
-.form-actions button.primary:hover {
-  background: #0099cc;
+.ud-form-actions button.primary:hover {
+  background: var(--color-primary-600);
 }
 
-/* Responsive Design */
+/* status-badge color variants */
+.status-badge.green { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+.status-badge.orange { background: rgba(251, 146, 60, 0.2); color: #fb923c; }
+.status-badge.red { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+.status-badge.gray { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+
+/* Responsive */
 @media (max-width: 768px) {
   .dashboard-container {
     flex-direction: column;
@@ -616,12 +622,6 @@
     overflow-x: auto;
   }
 
-  .modal {
-    width: 95%;
-    margin: 20px;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+  .ud-modal { width: 95%; margin: 20px; }
+  .ud-form-row { grid-template-columns: 1fr; }
 }

@@ -7,13 +7,14 @@ from app.api import dependencies
 
 router = APIRouter()
 
-@router.get("/", response_model=List[schemas.Transaction])
+@router.get("/", response_model=List[schemas.TransactionWithRelations])
 def list_transactions(
     db: Session = Depends(dependencies.get_db),
     current_user: models.User = Depends(dependencies.get_current_active_user),
 ):
     return (
         db.query(models.Transaction)
+        .options(joinedload(models.Transaction.recipient), joinedload(models.Transaction.user))
         .filter(models.Transaction.user_id == current_user.id)
         .order_by(models.Transaction.id.desc())
         .all()

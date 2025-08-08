@@ -1,10 +1,30 @@
 import axios from 'axios';
 
+const apiBaseURL = ((): string => {
+    const envUrl = process.env.REACT_APP_API_URL;
+    if (envUrl) return envUrl;
+    // Fallbacks by hostname
+    if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        if (host.endsWith('remity.io')) return 'https://api.remity.io/api/v1';
+    }
+    return 'http://localhost:8001/api/v1';
+})();
+
 const apiClient = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8001/api/v1',
+    baseURL: apiBaseURL,
     headers: {
         'Content-Type': 'application/json',
     },
+});
+
+// Attach Authorization header from localStorage if present
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        (config.headers as any).Authorization = `Bearer ${token}`;
+    }
+    return config;
 });
 
 export const login = (email: string, password: string) => {
@@ -30,8 +50,8 @@ export const getTransactions = () => {
     return apiClient.get('/transactions/');
 };
 
-export const createTransaction = (transactionData: any) => {
-    return apiClient.post('/transactions/', transactionData);
+export const createTransaction = (payload: any) => {
+    return apiClient.post('/transactions/', payload);
 };
 
 export const getCurrentUser = () => {
@@ -45,3 +65,11 @@ export const getUsers = () => {
 export const updateTransaction = (transactionId: number, data: any) => {
     return apiClient.patch(`/transactions/${transactionId}`, data);
 };
+
+// Recipients
+export const listRecipients = () => apiClient.get('/recipients/');
+export const createRecipient = (recipient: any) => apiClient.post('/recipients/', recipient);
+
+// Admin endpoints
+export const adminListTransactions = () => apiClient.get('/transactions/admin');
+export const adminUpdateTransaction = (id: number, data: any) => apiClient.patch(`/transactions/${id}/admin`, data);

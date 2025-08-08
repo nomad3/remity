@@ -3,10 +3,12 @@ replicaCount: 1
 image:
   repository: gcr.io/aremko-e51ae/remity-backend
   pullPolicy: IfNotPresent
-  tag: "latest"
+  tag: "v13"
 
 nameOverride: ""
 fullnameOverride: ""
+
+env: []
 
 service:
   type: ClusterIP
@@ -30,6 +32,6 @@ resources: {}
 
 database:
   host: "postgres-service-postgresql"
-  user: "postgres"
-  name: "postgres"
+  user: "remityuser"
+  name: "remitydb"
   secretName: "postgres-service-postgresql"

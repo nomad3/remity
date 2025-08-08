@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchUser = async () => {
         try {
-            const response = await fetch('http://localhost:8001/api/v1/users/me', {
+            const response = await fetch((process.env.REACT_APP_API_URL || (window.location.hostname.endsWith('remity.io') ? 'https://api.remity.io/api/v1' : 'http://localhost:8001/api/v1')) + '/users/me', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }

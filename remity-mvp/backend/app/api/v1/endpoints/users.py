@@ -25,6 +25,13 @@ def create_user(
     user = crud.user.create(db, obj_in=user_in)
     return user
 
+@router.get("/", response_model=List[schemas.User])
+def list_users(
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_superuser),
+) -> Any:
+    return db.query(models.User).all()
+
 @router.get("/me", response_model=schemas.User)
 def read_user_me(
     db: Session = Depends(dependencies.get_db),

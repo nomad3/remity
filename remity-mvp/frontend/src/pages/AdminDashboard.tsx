@@ -48,7 +48,7 @@ const AdminDashboard: React.FC = () => {
   const fetchData = async () => {
     try {
       const [transactionsRes, usersRes] = await Promise.all([
-        api.getTransactions(),
+        api.adminListTransactions(),
         api.getUsers()
       ]);
       setTransactions(transactionsRes.data);
@@ -62,13 +62,17 @@ const AdminDashboard: React.FC = () => {
 
   const handleTransactionAction = async (transactionId: number, action: 'approve' | 'reject') => {
     try {
-      await api.updateTransaction(transactionId, { status: action === 'approve' ? 'completed' : 'failed' });
+      await api.adminUpdateTransaction(transactionId, { status: action === 'approve' ? 'completed' : 'failed' });
       fetchData();
       setShowTransactionModal(false);
     } catch (error) {
       console.error('Error updating transaction:', error);
     }
   };
+
+  const [editStatus, setEditStatus] = useState('pending');
+  const [editNotes, setEditNotes] = useState('');
+  const [editProof, setEditProof] = useState('');
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -399,31 +403,33 @@ const AdminDashboard: React.FC = () => {
                 <span>{formatCurrency(selectedTransaction.total_amount, selectedTransaction.currency_to)}</span>
               </div>
               <div className="detail-row">
-                <label>Exchange Rate:</label>
-                <span>{selectedTransaction.exchange_rate.toFixed(4)}</span>
-              </div>
-              <div className="detail-row">
-                <label>Fee:</label>
-                <span>{formatCurrency(selectedTransaction.fee_amount, selectedTransaction.currency_from)}</span>
-              </div>
-              <div className="detail-row">
                 <label>Date:</label>
                 <span>{formatDate(selectedTransaction.created_at)}</span>
               </div>
             </div>
+            <div className="editor">
+              <div className="form-row">
+                <label>Status</label>
+                <select value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                  <option value="pending">pending</option>
+                  <option value="in_progress">in_progress</option>
+                  <option value="completed">completed</option>
+                  <option value="failed">failed</option>
+                </select>
+              </div>
+              <div className="form-row">
+                <label>Compliance Notes</label>
+                <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} placeholder="Add internal notes"></textarea>
+              </div>
+              <div className="form-row">
+                <label>Proof of Payment URL</label>
+                <input value={editProof} onChange={e => setEditProof(e.target.value)} placeholder="https://..." />
+              </div>
+            </div>
             <div className="modal-actions">
-              <button
-                className="reject-btn"
-                onClick={() => handleTransactionAction(selectedTransaction.id, 'reject')}
-              >
-                Reject
-              </button>
-              <button
-                className="approve-btn"
-                onClick={() => handleTransactionAction(selectedTransaction.id, 'approve')}
-              >
-                Approve
-              </button>
+              <button className="reject-btn" onClick={() => handleTransactionAction(selectedTransaction.id, 'reject')}>Reject</button>
+              <button className="approve-btn" onClick={() => handleTransactionAction(selectedTransaction.id, 'approve')}>Approve</button>
+              <button className="save-btn" onClick={async () => { await api.adminUpdateTransaction(selectedTransaction.id, { status: editStatus, compliance_notes: editNotes, proof_of_payment_url: editProof }); setShowTransactionModal(false); fetchData(); }}>Save</button>
             </div>
           </div>
         </div>

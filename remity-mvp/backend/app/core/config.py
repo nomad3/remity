@@ -16,12 +16,19 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}/{POSTGRES_DB}"
 
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:8080",
-    ]
+    # Allow override via env var BACKEND_CORS_ORIGINS (comma-separated)
+    _cors_env = os.getenv("BACKEND_CORS_ORIGINS")
+    if _cors_env:
+        BACKEND_CORS_ORIGINS: List[str] = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    else:
+        BACKEND_CORS_ORIGINS: List[str] = [
+            "http://localhost",
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:8080",
+            "https://remity.io",
+            "https://www.remity.io",
+        ]
 
     class Config:
         case_sensitive = True

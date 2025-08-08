@@ -1,8 +1,11 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
+from pydantic import ConfigDict
 
 # Shared properties
 class UserBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     email: Optional[EmailStr] = None
     is_active: Optional[bool] = True
     is_superuser: bool = False
@@ -19,9 +22,6 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: Optional[int] = None
-
-    class Config:
-        orm_mode = True
 
 # Additional properties to return via API
 class User(UserInDBBase):

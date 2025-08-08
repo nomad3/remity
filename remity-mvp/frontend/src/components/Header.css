@@ -1,0 +1,25 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.brand { color: #fff; text-decoration: none; font-weight: 800; font-size: 20px; }
+.nav { display: flex; gap: 14px; align-items: center; }
+.nav-link { color: var(--color-text-muted); text-decoration: none; }
+.nav-cta {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-600));
+  color: #fff; text-decoration: none; font-weight: 600;
+  border: 1px solid transparent;
+}
+.nav-cta:hover { filter: brightness(1.05); }

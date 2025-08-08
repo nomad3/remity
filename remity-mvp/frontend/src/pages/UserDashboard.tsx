@@ -60,7 +60,36 @@ const UserDashboard: React.FC = () => {
   const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.createTransaction(transferForm);
+      // 1) Create/Save recipient
+      const recipientPayload = {
+        full_name: transferForm.recipient_name,
+        email: transferForm.recipient_email,
+        bank_name: transferForm.recipient_bank,
+        account_number: transferForm.recipient_account,
+        country: 'US',
+      };
+      const rcpt = await api.createRecipient(recipientPayload);
+      const recipientId = rcpt.data.id;
+
+      // 2) Compute simple quote client-side for now
+      const amount = parseFloat(transferForm.amount || '0');
+      const fee = Math.max(1, amount * 0.01);
+      const rate = 0.9; // placeholder
+      const total = amount + fee;
+
+      // 3) Create transaction
+      const txPayload = {
+        recipient_id: recipientId,
+        amount,
+        currency_from: transferForm.currency_from,
+        currency_to: transferForm.currency_to,
+        exchange_rate: rate,
+        fee_amount: fee,
+        total_amount: total,
+        payment_method: 'bank_transfer',
+      };
+      await api.createTransaction(txPayload);
+
       setShowNewTransfer(false);
       setTransferForm({
         amount: '',
@@ -74,6 +103,7 @@ const UserDashboard: React.FC = () => {
       fetchTransactions();
     } catch (error) {
       console.error('Error creating transaction:', error);
+      alert('Failed to create transfer. Please try again.');
     }
   };
 
@@ -300,98 +330,47 @@ const UserDashboard: React.FC = () => {
       </div>
 
       {showNewTransfer && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>New Transfer</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowNewTransfer(false)}
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleTransferSubmit} className="transfer-form">
+        <div className="modal">
+          <div className="modal-content">
+            <h3>New Transfer</h3>
+            <form onSubmit={handleTransferSubmit}>
               <div className="form-row">
-                <div className="form-group">
-                  <label>Amount</label>
-                  <input
-                    type="number"
-                    value={transferForm.amount}
-                    onChange={(e) => setTransferForm({...transferForm, amount: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>From Currency</label>
-                  <select
-                    value={transferForm.currency_from}
-                    onChange={(e) => setTransferForm({...transferForm, currency_from: e.target.value})}
-                  >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>To Currency</label>
-                  <select
-                    value={transferForm.currency_to}
-                    onChange={(e) => setTransferForm({...transferForm, currency_to: e.target.value})}
-                  >
-                    <option value="EUR">EUR</option>
-                    <option value="USD">USD</option>
-                    <option value="GBP">GBP</option>
-                  </select>
-                </div>
+                <label>Amount</label>
+                <input value={transferForm.amount} onChange={e => setTransferForm({ ...transferForm, amount: e.target.value })} required />
               </div>
-
-              <div className="form-group">
+              <div className="form-row">
+                <label>From</label>
+                <select value={transferForm.currency_from} onChange={e => setTransferForm({ ...transferForm, currency_from: e.target.value })}>
+                  <option>USD</option>
+                  <option>EUR</option>
+                </select>
+              </div>
+              <div className="form-row">
+                <label>To</label>
+                <select value={transferForm.currency_to} onChange={e => setTransferForm({ ...transferForm, currency_to: e.target.value })}>
+                  <option>EUR</option>
+                  <option>USD</option>
+                </select>
+              </div>
+              <div className="form-row">
                 <label>Recipient Name</label>
-                <input
-                  type="text"
-                  value={transferForm.recipient_name}
-                  onChange={(e) => setTransferForm({...transferForm, recipient_name: e.target.value})}
-                  required
-                />
+                <input value={transferForm.recipient_name} onChange={e => setTransferForm({ ...transferForm, recipient_name: e.target.value })} required />
               </div>
-
-              <div className="form-group">
-                <label>Recipient Email</label>
-                <input
-                  type="email"
-                  value={transferForm.recipient_email}
-                  onChange={(e) => setTransferForm({...transferForm, recipient_email: e.target.value})}
-                  required
-                />
-              </div>
-
               <div className="form-row">
-                <div className="form-group">
-                  <label>Bank Name</label>
-                  <input
-                    type="text"
-                    value={transferForm.recipient_bank}
-                    onChange={(e) => setTransferForm({...transferForm, recipient_bank: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Account Number</label>
-                  <input
-                    type="text"
-                    value={transferForm.recipient_account}
-                    onChange={(e) => setTransferForm({...transferForm, recipient_account: e.target.value})}
-                  />
-                </div>
+                <label>Recipient Email</label>
+                <input value={transferForm.recipient_email} onChange={e => setTransferForm({ ...transferForm, recipient_email: e.target.value })} />
               </div>
-
-              <div className="form-actions">
-                <button type="button" onClick={() => setShowNewTransfer(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="primary">
-                  Send Transfer
-                </button>
+              <div className="form-row">
+                <label>Bank</label>
+                <input value={transferForm.recipient_bank} onChange={e => setTransferForm({ ...transferForm, recipient_bank: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <label>Account</label>
+                <input value={transferForm.recipient_account} onChange={e => setTransferForm({ ...transferForm, recipient_account: e.target.value })} />
+              </div>
+              <div className="actions">
+                <button type="submit" className="primary">Create Transfer</button>
+                <button type="button" onClick={() => setShowNewTransfer(false)}>Cancel</button>
               </div>
             </form>
           </div>

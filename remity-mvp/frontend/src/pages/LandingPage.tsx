@@ -1,18 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import CalculatorSection from '../components/CalculatorSection';
+import Layout from '../components/Layout';
 import './LandingPage.css';
 
 const LandingPage: React.FC = () => {
     return (
+        <Layout>
         <div className="landing-page">
-            <header className="header">
-                <div className="logo">Remity</div>
-                <nav className="nav">
-                    <Link to="/login" className="nav-link">Log in</Link>
-                    <Link to="/register" className="nav-link-primary">Register</Link>
-                </nav>
-            </header>
             <main className="main-content">
                 <div className="hero-section">
                     <div className="hero-background">
@@ -134,6 +129,7 @@ const LandingPage: React.FC = () => {
                 <p>&copy; 2024 Remity. All rights reserved.</p>
             </footer>
         </div>
+        </Layout>
     );
 };
 

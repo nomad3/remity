@@ -3,6 +3,26 @@
 ## Project Overview
 Create a complete, production-ready remittance platform called "Remity" that allows users to send money internationally with competitive rates and transparent fees. The platform should be inspired by Wise.com's design and functionality.
 
+## Current Implementation Snapshot (Live)
+- Frontend (React/TypeScript)
+  - Modern glassmorphism theme, shared `Header`/`Footer`/`Layout`
+  - Landing page with Trust Bar, FAQ
+  - Calculator can start a transfer: prompts for recipient, then creates recipient + transaction; if not logged in, saves a draft and redirects to login
+  - Auth pages polished; login has quick-fill buttons for Admin/Operator/User test accounts
+  - User dashboard (overview, transactions) and basic recipients flow (via calculator)
+  - Admin dashboard (operator view): list all transfers, approve/reject, edit status, compliance notes, and proof-of-payment URL
+- Backend (FastAPI)
+  - Users: register/login/JWT, current user, admin list
+  - Recipients: CRUD, user‑scoped
+  - Transactions: create/list (user‑scoped); admin list (with joined user + recipient); admin/user patch to update status/notes/proof; auto-set `completed_at`
+  - Models: `User`, `Recipient`, `Transaction` (includes `proof_of_payment_url`); SQLAlchemy + Pydantic v2 (`from_attributes`)
+  - CORS configured for localhost + `https://remity.io`
+  - Optional demo seed (ENABLE_SEED=true): creates admin/operator/user and 3 sample transactions
+- DevOps
+  - Docker images (amd64)
+  - Helm charts (frontend/backend) with TLS (cert-manager/Let’s Encrypt)
+  - Env injection via Helm (`values.env[]`), DB backed by Bitnami PostgreSQL
+
 ## Tech Stack Requirements
 - **Backend**: FastAPI with Python 3.9+
 - **Frontend**: React with TypeScript
@@ -26,10 +46,11 @@ Create a complete, production-ready remittance platform called "Remity" that all
 - Modern, clean design with hero section
 - Real-time currency calculator
 - Features showcase (transparency, security, regulation)
-- Customer testimonials
+- Customer testimonials / trust bar
 - How it works section
 - Security and compliance information
 - Call-to-action buttons for registration
+- Create transfer directly from the calculator: collect recipient info and submit
 
 ### 3. Currency Calculator
 - Real-time exchange rate display
@@ -46,27 +67,29 @@ Create a complete, production-ready remittance platform called "Remity" that all
 - Profile settings
 - Security settings
 
-### 5. Admin Dashboard
+### 5. Admin/Operator Dashboard
 - Pending transaction approvals
 - User management
 - System statistics
 - Transaction monitoring
 - Compliance tools
+- Update transaction status (pending/in_progress/completed/failed)
+- Add compliance notes and proof-of-payment URL
 
 ### 6. Transaction System
-- Create new transfers
+- Create new transfers (via landing calculator + recipient modal and in dashboard)
 - Recipient management
 - Payment method selection
 - Transfer status tracking
 - Email notifications
 - Receipt generation
 
-### 7. API Endpoints
+### 7. API Endpoints (implemented + planned)
 - Authentication: `/api/v1/auth/login`, `/api/v1/auth/register`
-- Users: `/api/v1/users/me`, `/api/v1/users/{id}`
-- Transactions: `/api/v1/transactions/`, `/api/v1/transactions/{id}`
-- Recipients: `/api/v1/recipients/`, `/api/v1/recipients/{id}`
-- Admin: `/api/v1/admin/transactions`, `/api/v1/admin/users`
+- Users: `/api/v1/users/me`, `/api/v1/users/` (admin), `/api/v1/users/{id}` (admin)
+- Recipients: `/api/v1/recipients/` (GET/POST), `/api/v1/recipients/{id}` (PATCH/DELETE)
+- Transactions (user): `/api/v1/transactions/` (GET/POST), `/api/v1/transactions/{id}` (PATCH)
+- Transactions (admin/operator): `/api/v1/transactions/admin` (GET), `/api/v1/transactions/{id}/admin` (PATCH)
 
 ## Database Schema
 
@@ -97,8 +120,11 @@ CREATE TABLE transactions (
     fee_amount DECIMAL(10,2) NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
     status VARCHAR(20) DEFAULT 'pending',
+    payment_method VARCHAR(50) NOT NULL,
+    proof_of_payment_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP
 );
 ```
 
@@ -114,6 +140,7 @@ CREATE TABLE recipients (
     account_number VARCHAR,
     routing_number VARCHAR,
     swift_code VARCHAR,
+    iban VARCHAR,
     country VARCHAR NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -124,14 +151,14 @@ CREATE TABLE recipients (
 ### Landing Page Components
 - Header with navigation and CTA buttons
 - Hero section with compelling copy
-- Currency calculator with real-time rates
+- Currency calculator with real-time rates and "Send now" flow (recipient modal)
 - Features section with icons
-- Testimonials carousel
-- Security section
+- Testimonials/Trust bar
+- FAQ and Security section
 - Footer with links
 
 ### Authentication Pages
-- Login page with email/password
+- Login page with email/password (quick-fill for demo)
 - Registration page with form validation
 - Password reset page
 - Clean, modern design inspired by Wise.com
@@ -148,6 +175,7 @@ CREATE TABLE recipients (
 - Approval workflows
 - Statistics cards
 - Search and filter functionality
+- Transaction editor (status/notes/proof URL)
 
 ## Styling Requirements
 - Modern, clean design inspired by Wise.com
@@ -167,14 +195,14 @@ CREATE TABLE recipients (
 
 ## Docker Configuration
 - Multi-stage builds for optimization
-- Nginx for frontend serving
+- Frontend served via Node `serve` in container
 - PostgreSQL database
 - Environment variable management
 - Health checks
 
 ## Kubernetes Deployment
 - Separate Helm charts for frontend and backend
-- Ingress configuration for routing
+- Ingress configuration for routing (TLS via cert-manager)
 - Database persistence
 - Secret management
 - Horizontal pod autoscaling
@@ -213,36 +241,6 @@ CREATE TABLE recipients (
 - Real-time notifications
 - Dark mode support
 
-## File Structure
-```
-remity/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── core/
-│   │   ├── crud/
-│   │   ├── db/
-│   │   ├── models/
-│   │   └── schemas/
-│   ├── alembic/
-│   ├── tests/
-│   ├── Dockerfile
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── contexts/
-│   ├── public/
-│   ├── Dockerfile
-│   └── package.json
-├── k8s/
-│   ├── remity-backend-chart/
-│   └── remity-frontend-chart/
-└── docker-compose.yml
-```
-
 ## Implementation Notes
 - Use FastAPI's automatic OpenAPI generation
 - Implement proper error handling and status codes
@@ -266,4 +264,22 @@ remity/
 - Performance meets requirements
 - Security best practices are followed
 
-Please create this application with production-ready code quality, comprehensive error handling, and a focus on user experience. The application should be immediately deployable and maintainable.
+---
+
+## Seed & Demo Accounts (for testing)
+- Admin: `admin@remity.io` / `Test12345!`
+- Operator: `operator@remity.io` / `Test12345!`
+- User: `user@remity.io` / `Test12345!`
+- ENABLE_SEED=true seeds recipients + 3 transactions (pending, in_progress, completed)
+
+## Next Milestones (Missing / To Do)
+1. Recipient management UI in user dashboard (full CRUD page)
+2. Pricing section + transparent fee breakdown; rate source integration (real provider)
+3. File upload for proof-of-payment (GCS/S3) and secure signed URLs
+4. Email notifications (sendgrid/mailjet) for status changes and receipts (PDF generation)
+5. Robust access control (operator vs admin scopes) and audit logging
+6. Full error/empty/loading states across all pages; toast notifications
+7. E2E tests (Playwright/Cypress) for auth, transfer creation, operator approval
+8. Rate limiting & anti‑abuse; IP allow/deny lists
+9. Observability: metrics/dashboard (Prometheus/Grafana), error tracking (Sentry)
+10. i18n (EN/ES) and comprehensive mobile QA

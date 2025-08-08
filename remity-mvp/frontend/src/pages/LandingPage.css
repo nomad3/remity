@@ -529,3 +529,19 @@
     color: rgba(255, 255, 255, 0.8);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+.trust-bar { padding: 24px 0; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); background: rgba(255,255,255,0.04); }
+.trust-inner { display: flex; align-items: center; gap: 24px; justify-content: space-between; }
+.trust-text { color: var(--color-text-muted); font-size: 14px; }
+.trust-logos { display: flex; gap: 24px; opacity: 0.9; filter: grayscale(100%) brightness(1.2); }
+.trust-logos img { height: 28px; }
+
+.faq-section { padding: 64px 0; }
+.faq-item { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 12px; }
+.faq-item summary { cursor: pointer; font-weight: 600; }
+.faq-item p { color: var(--color-text-muted); margin: 10px 0 0; }
+
+@media (max-width: 768px) {
+  .trust-inner { flex-direction: column; gap: 12px; }
+  .trust-logos { flex-wrap: wrap; justify-content: center; gap: 16px; }
+}

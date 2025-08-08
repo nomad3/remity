@@ -24,7 +24,39 @@ const LandingPage: React.FC = () => {
                     </div>
                 </div>
             </main>
+
+            <section className="trust-bar" aria-label="Trusted by">
+              <div className="container trust-inner">
+                <span className="trust-text">Trusted by teams at</span>
+                <div className="trust-logos" role="list">
+                  <img role="listitem" src="/assets/award-icon.svg" alt="Award" />
+                  <img role="listitem" src="/assets/shield-icon.svg" alt="Security" />
+                  <img role="listitem" src="/assets/users-icon.svg" alt="Users" />
+                  <img role="listitem" src="/assets/zap-icon.svg" alt="Speed" />
+                </div>
+              </div>
+            </section>
+
             <CalculatorSection />
+
+            <section className="faq-section" id="faq" aria-labelledby="faq-heading">
+              <div className="container">
+                <h2 className="section-title" id="faq-heading">Frequently Asked Questions</h2>
+                <details className="faq-item">
+                  <summary>How long do transfers take?</summary>
+                  <p>Most transfers complete within minutes. Bank transfers can take up to 1-2 business days depending on the corridor.</p>
+                </details>
+                <details className="faq-item">
+                  <summary>What fees will I pay?</summary>
+                  <p>We show the fee upfront and use the real exchange rate. No hidden markups.</p>
+                </details>
+                <details className="faq-item">
+                  <summary>Is my money safe?</summary>
+                  <p>We use bank‑level security, conduct ongoing monitoring, and keep your data encrypted at rest and in transit.</p>
+                </details>
+              </div>
+            </section>
+
             <section className="features-section">
                 <div className="feature">
                     <div className="feature-icon">
